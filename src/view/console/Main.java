@@ -11,8 +11,7 @@ import java.time.format.DateTimeFormatter;
 import model.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 public class Main {
 
@@ -39,12 +38,13 @@ public class Main {
                     } catch (cumplirEdadEx ex) {
                         System.out.println(ex.getMessage());
                     } catch (formatoDniEx ex) {
-                    System.out.println(ex.getMessage());
-                } catch (formatoEmailEx ex) {
-                    System.out.println(ex.getMessage());
+                        System.out.println(ex.getMessage());
+                    } catch (formatoEmailEx ex) {
+                        System.out.println(ex.getMessage());
+                    }
                 }
-                }
-                case 2 -> addTeacher(scanner, drivingSchool);
+                case 2 ->
+                    addTeacher(scanner, drivingSchool);
                 case 3 -> {
                     try {
                         addEmployee(scanner, drivingSchool);
@@ -52,19 +52,32 @@ public class Main {
                         System.out.println(ex.getMessage());
                     }
                 }
-                case 4 -> removeStudentById(scanner, drivingSchool);
-                case 5 -> removeTeacher(scanner, drivingSchool);
-                case 6 -> removeEmployee(scanner, drivingSchool);
-                case 7 -> System.out.println(drivingSchool.listStudents());
-                case 8 -> System.out.println(drivingSchool.listTeacher());
-                case 9 -> System.out.println(drivingSchool.listEmployees());
-                case 10 -> System.out.println(drivingSchool.studentsWithPracticalPending());
-                case 11 -> calculateFinancials(drivingSchool);
-                case 12 -> evaluateStudent(scanner, drivingSchool);
-                case 13 -> System.out.println(drivingSchool.listApprovedStudents());
-                case 14 -> System.out.println(drivingSchool.listNotApprovedStudents());
-                case 0 -> System.out.println("Saliendo del sistema...");
-                default -> System.out.println("Opción inválida. Por favor, elige una opción válida.");
+                case 4 ->
+                    removeStudentById(scanner, drivingSchool);
+                case 5 ->
+                    removeTeacher(scanner, drivingSchool);
+                case 6 ->
+                    removeEmployee(scanner, drivingSchool);
+                case 7 ->
+                    System.out.println(drivingSchool.listStudents());
+                case 8 ->
+                    System.out.println(drivingSchool.listTeacher());
+                case 9 ->
+                    System.out.println(drivingSchool.listEmployees());
+                case 10 ->
+                    System.out.println(drivingSchool.studentsWithPracticalPending());
+                case 11 ->
+                    calculateFinancials(drivingSchool);
+                case 12 ->
+                    evaluateStudent(scanner, drivingSchool);
+                case 13 ->
+                    System.out.println(drivingSchool.listApprovedStudents());
+                case 14 ->
+                    System.out.println(drivingSchool.listNotApprovedStudents());
+                case 0 ->
+                    System.out.println("Saliendo del sistema...");
+                default ->
+                    System.out.println("Opción inválida. Por favor, elige una opción válida.");
             }
         } while (option != 0);
 
@@ -92,47 +105,71 @@ public class Main {
     }
 
     private static void addStudent(Scanner scanner, DrivingSchool drivingSchool) throws cumplirEdadEx, formatoDniEx, formatoEmailEx {
-    System.out.println("\n--- Alta de Alumno ---");
-    System.out.print("Nombre: ");
-    String name = scanner.nextLine();
-    System.out.print("Apellido: ");
-    String surname = scanner.nextLine();
-    System.out.print("ID: ");
-    String id = scanner.nextLine();
-    
-    // Validar el formato del DNI
-    if (!id.matches("\\d{8}[A-Za-z]")) {
-        throw new formatoDniEx("El formato del DNI no es válido. Debe ser 8 dígitos seguidos de una letra.");
+        System.out.println("\n--- Alta de Alumno ---");
+        System.out.print("Nombre: ");
+        String name = scanner.nextLine();
+        System.out.print("Apellido: ");
+        String surname = scanner.nextLine();
+        System.out.print("ID: ");
+        String id = scanner.nextLine();
+
+        // Validar el formato del DNI
+        if (!id.matches("\\d{8}[A-Za-z]")) {
+            throw new formatoDniEx("El formato del DNI no es válido. Debe ser 8 dígitos seguidos de una letra.");
+        }
+
+        System.out.print("Email: ");
+        String email = scanner.nextLine();
+
+        // Validar el formato del email
+        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new formatoEmailEx("El formato del email no es válido.");
+        }
+
+        System.out.print("Fecha de nacimiento (DD-MM-AAAA): ");
+        LocalDate date = LocalDate.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+
+        // Validar edad mínima
+        int age = Period.between(date, LocalDate.now()).getYears();
+        if (age < 18) {
+            throw new cumplirEdadEx("El alumno tiene que ser mayor de edad");
+        }
+
+        System.out.print("Estado de aprobación (0: no aprobado, 1: aprobado): ");
+        int approvalStatus = scanner.nextInt();
+        System.out.print("Cuota de inscripción: ");
+        float registrationFee = scanner.nextFloat();
+        scanner.nextLine(); // Consumir nueva línea
+
+        // Mostrar profesores disponibles
+        if (drivingSchool.getTeachersList().isEmpty()) {
+            System.out.println("No hay profesores registrados. Por favor, añade un profesor antes de asignar alumnos.");
+            return; // Salir del método si no hay profesores
+        }
+
+        System.out.println("\n--- Profesores Disponibles ---");
+        for (int i = 0; i < drivingSchool.getTeachersList().size(); i++) {
+            Teacher teacher = drivingSchool.getTeachersList().get(i);
+            System.out.println(i + ") " + teacher.getName() + " " + teacher.getSurname());
+        }
+
+        System.out.print("Selecciona el índice del profesor para asignar al alumno: ");
+        int teacherIndex = scanner.nextInt();
+        scanner.nextLine(); // Consumir nueva línea
+
+        // Validar selección del profesor
+        if (teacherIndex < 0 || teacherIndex >= drivingSchool.getTeachersList().size()) {
+            System.out.println("Índice de profesor no válido. Alumno no añadido.");
+            return;
+        }
+
+        Teacher selectedTeacher = drivingSchool.getTeachersList().get(teacherIndex);
+
+        // Crear nuevo alumno con profesor asignado
+        Student newStudent = new Student(name, surname, id, email, date, approvalStatus, registrationFee, selectedTeacher);
+        drivingSchool.addStudent(newStudent);
+        System.out.println("Alumno añadido exitosamente y asignado al profesor: " + selectedTeacher.getName() + " " + selectedTeacher.getSurname());
     }
-
-    System.out.print("Email: ");
-    String email = scanner.nextLine();
-    
-    // Validar el formato del email
-    if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-        throw new formatoEmailEx("El formato del email no es válido.");
-    }
-
-    System.out.print("Fecha de nacimiento (DD-MM-AAAA): ");
-    LocalDate date = LocalDate.parse(scanner.nextLine(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-
-    // Validar edad mínima
-    int age = Period.between(date, LocalDate.now()).getYears();
-    if (age < 18) {
-        throw new cumplirEdadEx("El alumno tiene que ser mayor de edad");
-    }
-
-    System.out.print("Estado de aprobación (0: no aprobado, 1: aprobado): ");
-    int approvalStatus = scanner.nextInt();
-    System.out.print("Cuota de inscripción: ");
-    float registrationFee = scanner.nextFloat();
-    scanner.nextLine(); // Consumir nueva línea
-
-    Student newStudent = new Student(name, surname, id, email, date, approvalStatus, registrationFee, null);
-    drivingSchool.addStudent(newStudent);
-    System.out.println("Alumno añadido exitosamente.");
-}
-
 
     private static void addTeacher(Scanner scanner, DrivingSchool drivingSchool) {
         System.out.println("\n--- Alta de Profesor ---");
